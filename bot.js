@@ -1,5 +1,5 @@
 var Botkit = require('botkit')
-var logger = require('morgan')
+//var logger = require('morgan')
 
 var token = process.env.SLACK_TOKEN
 
@@ -15,12 +15,10 @@ var controller = Botkit.slackbot({
   debug: false
 })
 
-var myBot = null;
-
 // Assume single team mode if we have a SLACK_TOKEN
 if (token) {
   console.log('Starting in single-team mode')
-  myBot = controller.spawn({
+  var myBot = controller.spawn({
     token: token
   }).startRTM(function (err, bot, payload) {
     if (err) {
@@ -29,6 +27,19 @@ if (token) {
 
     console.log('Connected to Slack RTM')
   })
+  
+	// fetch and store team information
+	myBot.api.team.info({}, function (err, res) {
+	  if (err) {
+		return console.error(err)
+	  }
+
+	  controller.storage.teams.save({id: res.team.id}, (err) => {
+		if (err) {
+		  console.error(err)
+		}
+	  })
+	})
 // Otherwise assume multi-team mode - setup beep boop resourcer connection
 } else {
   console.log('Starting in Beep Boop multi-team mode')
@@ -41,7 +52,7 @@ controller.setupWebserver(PORT, function (err, webserver) {
     process.exit(1)
   }
 
-  webserver.use(logger('tiny'))
+  //webserver.use(logger('tiny'))
   // Setup our slash command webhook endpoints
   controller.createWebhookEndpoints(webserver)
 })
