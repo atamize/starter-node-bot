@@ -1,6 +1,13 @@
 var Botkit = require('botkit')
+var logger = require('morgan')
 
 var token = process.env.SLACK_TOKEN
+
+// Beep Boop specifies the port you should listen on default to 8080 for local dev
+var PORT = process.env.PORT || 8080
+
+// Slack slash command verify token
+var VERIFY_TOKEN = process.env.SLACK_VERIFY_TOKEN
 
 var controller = Botkit.slackbot({
   // reconnect to Slack RTM when connection goes bad
@@ -8,10 +15,12 @@ var controller = Botkit.slackbot({
   debug: false
 })
 
+var myBot = null;
+
 // Assume single team mode if we have a SLACK_TOKEN
 if (token) {
   console.log('Starting in single-team mode')
-  controller.spawn({
+  myBot = controller.spawn({
     token: token
   }).startRTM(function (err, bot, payload) {
     if (err) {
@@ -25,6 +34,17 @@ if (token) {
   console.log('Starting in Beep Boop multi-team mode')
   require('beepboop-botkit').start(controller, { debug: true })
 }
+
+controller.setupWebserver(PORT, function (err, webserver) {
+  if (err) {
+    console.error(err)
+    process.exit(1)
+  }
+
+  webserver.use(logger('tiny'))
+  // Setup our slash command webhook endpoints
+  controller.createWebhookEndpoints(webserver)
+})
 
 var words = ['ACNE','ACRE','ANDROID','ADVERTISE','AIRCRAFT','AISLE','ALLIGATOR','ALLOY','AMERICA','ANKLE','APATHY','APPLAUSE','AGENT','APPLICATION','ARCHAEOLOGY','ARISTOCRAT','ARM','ARMADA','ANCHOR','ASTRONAUT',
 'ATHLETE','ATLANTIS','ANNUAL','AVOCADO','BABYSITTER','SPINE','BAG','BAGUETTE','BALD','BALLOON','BANANA','BEE','BASEBALL','BRIEF','BASKETBALL','BAT','BATTERY','BEACH','BEAN','BEDBUG',
@@ -768,4 +788,22 @@ controller.hears(['help'], 'direct_message,direct_mention,mention', function(bot
 	    '*force* [codename] - force a codename to go through regardless of votes\n' +
 	    '\n\nVotes must be either unanimous or forced to be accepted';
 	    bot.reply(message, msg);
+});
+
+controller.on('slash_command', function (bot, message) {
+	// Validate Slack verify token
+	if (message.token !== VERIFY_TOKEN) {
+		return bot.res.send(401, 'Unauthorized')
+	}
+
+	switch (message.command) {
+		case '/beepboop':
+			bot.replyPrivate(message, 'boopbeep')
+			break
+		case '/vote':
+			bot.replyPublic(message, 'Yeah, you voted for ' + message.text);
+			break;
+		default:
+			bot.replyPrivate(message, "Sorry, I'm not sure what that command is");
+	}
 });
