@@ -227,7 +227,7 @@ function teamOp(bot, _message, team, op) {
 	var u = getUser(_message.user);
 	if (u) {
 		leave(u);
-		bot.reply(_message, teamOpHelper(user));
+		bot.reply(_message, teamOpHelper(u, team, op));
 	} else {
 		bot.api.users.info({token: token, user: _message.user}, function(err, response) {
 			var username = _message.user;
@@ -235,8 +235,8 @@ function teamOp(bot, _message, team, op) {
 				username = response.user.name;
 			}
 			
-			var user = getOrAddUser(_message, username);
-			bot.reply(_message, teamOpHelper(user, team, op));
+			u = getOrAddUser(_message, username);
+			bot.reply(_message, teamOpHelper(u, team, op));
 		});
 	}
 }
@@ -672,8 +672,8 @@ controller.hears(['join random'], 'direct_message,direct_mention,mention', funct
 				username = response.user.name;
 			}
 			
-			var user = getOrAddUser(message, username);
-			bot.reply(message, joinRandom(user));
+			u = getOrAddUser(message, username);
+			bot.reply(message, joinRandom(u));
 		});
 	}
 });
