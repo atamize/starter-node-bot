@@ -855,7 +855,7 @@ controller.hears(['h4x (.*)'], 'direct_message', function(bot, message) {
 	bot.reply(message, msg);
 });
 
-controller.hears(['recycle'], 'direct_message,direct_mention,mention', function(bot, message) {
+controller.hears(['recycle names'], 'direct_message,direct_mention,mention', function(bot, message) {
     recycle();
-	bot.reply('Recycled codenames (used codenames can show up again)');
+	bot.reply(message, 'Recycled codenames (used codenames can show up again)');
 });
