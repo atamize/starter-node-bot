@@ -188,14 +188,14 @@ function leave(user) {
 	}
 }
 
-function getOrAddUser(_message) {
+function getOrAddUser(_message, username) {
 	var user = getUser(_message.user);
 	if (user) {
 		leave(user);
 	} else {
 		user = {
 			id: _message.user,
-			name: _message.user,
+			name: username,
 			message: _message
 		};
 		users.push(user);
@@ -213,15 +213,32 @@ function getOrAddUser(_message) {
 	return user;
 }
 
-function teamOp(_message, team, op) {
+function teamOpHelper(user, team, op) {
 	var idx;
 	for (idx = 0; idx < teams.length; idx++) {
 		if (teams[idx].type == team) {
-		    var user = getOrAddUser(_message);
 			return op(teams[idx], user);
 		}
 	}
 	return 'Invalid team';
+}
+
+function teamOp(bot, _message, team, op) {
+	var u = getUser(_message.user);
+	if (u) {
+		leave(u);
+		bot.reply(_message, teamOpHelper(user));
+	} else {
+		bot.api.users.info({token: token, user: _message.user}, function(err, response) {
+			var username = _message.user;
+			if (response.ok) {
+				username = response.user.name;
+			}
+			
+			var user = getOrAddUser(_message, username);
+			bot.reply(_message, teamOpHelper(user, team, op));
+		});
+	}
 }
 
 function joinOp(team, user) {
@@ -247,11 +264,10 @@ function shuffle(arr) {
 	}
 }
 
-function joinRandom(_message) {
+function joinRandom(user) {
 	var t = randomRange(0, 2);
 	var team = teams[t];
-	var user = getOrAddUser(_message);
-	
+		
 	if (team.spymaster === null) {
 		team.spymaster = user;
 		return user.name + ' is the Spymaster for ' + team.name;
@@ -629,35 +645,38 @@ controller.hears(['start'], 'direct_message,direct_mention,mention', function(bo
 });
 
 controller.hears(['spy red'], 'direct_message,direct_mention,mention', function(bot, message) {
-    var msg = teamOp(message, 'red', spyOp);
-    bot.reply(message, msg);
+    teamOp(bot, message, 'red', spyOp);
 });
 
 controller.hears(['spy blue'], 'direct_message,direct_mention,mention', function(bot, message) {
-    var msg = teamOp(message, 'blue', spyOp);
-    bot.reply(message, msg);
+    teamOp(bot, message, 'blue', spyOp);
 });
 
 controller.hears(['join red'], 'direct_message,direct_mention,mention', function(bot, message) {
-    var msg = teamOp(message, 'red', joinOp);
-    bot.reply(message, msg);
+    teamOp(bot, message, 'red', joinOp);
 });
 
 controller.hears(['join blue'], 'direct_message,direct_mention,mention', function(bot, message) {
-    var msg = teamOp(message, 'blue', joinOp);
-    bot.reply(message, msg);
+    teamOp(bot, message, 'blue', joinOp);
 });
 
 controller.hears(['join random'], 'direct_message,direct_mention,mention', function(bot, message) {
-	bot.api.users.info({token: token, user: message.user},function(err,response) {
-	    if (response && response.ok) {
-			bot.reply(message, response.user.name + ' joined');
-		}
-	})
-    var msg = joinRandom(message);
-    bot.reply(message, msg);
+	var u = getUser(message.user);
+	if (u) {
+		leave(u);
+		bot.reply(message, joinRandom(u));
+	} else {
+		bot.api.users.info({token: token, user: message.user}, function(err, response) {
+			var username = message.user;
+			if (response.ok) {
+				username = response.user.name;
+			}
+			
+			var user = getOrAddUser(message, username);
+			bot.reply(message, joinRandom(user));
+		});
+	}
 });
-
 
 controller.hears(['show teams'], 'direct_message,direct_mention,mention', function(bot, message) {
     var msg = showTeams();
