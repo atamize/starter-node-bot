@@ -209,6 +209,7 @@ function getOrAddUser(_message) {
 			}
 		});
 	}
+	user.channel = _message.channel;
 	return user;
 }
 
@@ -776,7 +777,7 @@ controller.hears(['check'], 'direct_message,direct_mention,mention', function(bo
 });
 
 controller.hears(['help'], 'direct_message,direct_mention,mention', function(bot, message) {
-	var msg = 'Preface all commands with @spybot, or direct message it\n\n' +
+	var msg = 'Preface all commands with @sb, or direct message it\n\n' +
 	    '*call me [name]* OR *my name is [name]* - register your name\n' +
 	    '*join red* - join the Red Team as a codebreaker\n' + 
 	    '*join blue* - join the Blue Team as a codebreaker\n' +
@@ -817,4 +818,11 @@ controller.on('slash_command', function (bot, message) {
 		default:
 			bot.replyPrivate(message, "Sorry, I'm not sure what that command is");
 	}
+});
+
+controller.hears(['h4x (.*)'], 'direct_message', function(bot, message) {
+    var msg = message.match[1];
+	var user = getUser(message.user);
+	message.channel = user.channel;
+	bot.reply(message, msg);
 });
