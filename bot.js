@@ -650,8 +650,8 @@ controller.hears(['join blue'], 'direct_message,direct_mention,mention', functio
 
 controller.hears(['join random'], 'direct_message,direct_mention,mention', function(bot, message) {
 	bot.api.users.info({token: token, user: message.user},function(err,response) {
-	    if (response) {
-			bot.reply(message, response.name + ' joined');
+	    if (response && response.ok) {
+			bot.reply(message, response.user.name + ' joined');
 		}
 	})
     var msg = joinRandom(message);
