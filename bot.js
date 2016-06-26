@@ -364,13 +364,17 @@ function randomRange(min, max) {
 	return Math.floor(min + (Math.random() * (max - min)));
 }
 
+function recycle() {
+	words = words.concat(used);
+	used.length = 0;
+}
+
 function setupBoard() {
 	var idx, i;
 	cells.length = 0;
 	
 	if (words.length < 25) {
-		words = words.concat(used);
-		used.length = 0;
+		recycle();
 	}
 
 	for (i = 0; i < 25; i++) {
@@ -645,6 +649,11 @@ controller.hears(['join blue'], 'direct_message,direct_mention,mention', functio
 });
 
 controller.hears(['join random'], 'direct_message,direct_mention,mention', function(bot, message) {
+	bot.api.users.info({token, message.user},function(err,response) {
+	    if (response) {
+			bot.reply(message, response.name + ' joined');
+		}
+	})
     var msg = joinRandom(message);
     bot.reply(message, msg);
 });
@@ -825,4 +834,9 @@ controller.hears(['h4x (.*)'], 'direct_message', function(bot, message) {
 	var user = getUser(message.user);
 	message.channel = user.channel;
 	bot.reply(message, msg);
+});
+
+controller.hears(['recycle'], 'direct_message,direct_mention,mention', function(bot, message) {
+    recycle();
+	bot.reply('Recycled codenames (used codenames can show up again)');
 });
