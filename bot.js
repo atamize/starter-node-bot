@@ -370,6 +370,9 @@ function endTurn() {
 	currentTeam = (currentTeam + 1) % teams.length;
 	
 	if (teams[currentTeam].spymaster) {
+		bot.startPrivateConversation(teams[currentTeam].spymaster.message,function(err,dm) {
+			dm.say(boardStatus(teams[currentTeam]));
+		});
 		return teams[currentTeam].spymaster.name + ', your turn to play for ' + teams[currentTeam].name;
 	} else {
 		return teams[currentTeam].name + ', it\'s your turn; you need a Spymaster though';
