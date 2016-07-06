@@ -227,6 +227,7 @@ function teamOp(bot, _message, team, op) {
 	var u = getUser(_message.user);
 	if (u) {
 		leave(u);
+		u.channel = _message.channel;
 		bot.reply(_message, teamOpHelper(u, team, op));
 	} else {
 		bot.api.users.info({token: token, user: _message.user}, function(err, response) {
@@ -667,6 +668,7 @@ controller.hears(['join random'], 'direct_message,direct_mention,mention', funct
 	var u = getUser(message.user);
 	if (u) {
 		leave(u);
+		u.channel = message.channel;
 		bot.reply(message, joinRandom(u));
 	} else {
 		bot.api.users.info({token: token, user: message.user}, function(err, response) {
