@@ -366,7 +366,7 @@ function clearVotes() {
 	lastVote = '';
 }
 
-function endTurn() {
+function endTurn(bot) {
 	clearVotes();
 	currentTeam = (currentTeam + 1) % teams.length;
 	
@@ -534,7 +534,7 @@ function showVotes() {
 	return msg;
 }
 
-function vote(user, word, force) {
+function vote(user, word, force, bot) {
 	var team = null;
 	for (i = 0; i < teams.length; i++) {
 		if (teams[i].members.indexOf(user) != -1) {
@@ -598,7 +598,7 @@ function vote(user, word, force) {
 				msg += '\n\n' + team.name + ', it is still your turn';
 				clearVotes();
 			} else {
-				msg += '\n\n' + endTurn();
+				msg += '\n\n' + endTurn(bot);
 			}
 			return msg;
 		}
@@ -609,7 +609,7 @@ function vote(user, word, force) {
 		lastVote = upper;
 		var msg = user.name + ' voted to END TURN';
 		if (force || team.members.every(agree)) {
-			msg += '\n\n' + boardStatus() + '\n\n' + endTurn();
+			msg += '\n\n' + boardStatus() + '\n\n' + endTurn(bot);
 		}
 		return msg;
 	}
@@ -706,7 +706,7 @@ controller.hears(['vote (.*)'], 'direct_mention,mention', function(bot, message)
 	var word = message.match[1];
 	var user = getUser(message.user);
 	if (user) {
-		var msg = vote(user, word, false);
+		var msg = vote(user, word, false, bot);
 		bot.reply(message, msg);	
 	}
 });
@@ -720,7 +720,7 @@ controller.hears(['agree'], 'direct_mention,mention', function(bot, message) {
 	if (lastVote !== '') {
 		var user = getUser(message.user);
 		if (user) {
-			bot.reply(message, vote(user, lastVote, false));
+			bot.reply(message, vote(user, lastVote, false, bot));
 		}
 	} else {
 		bot.reply(message, 'No votes have been cast yet');
@@ -735,7 +735,7 @@ controller.hears(['end turn'], 'direct_message,direct_mention,mention', function
 	
 	var user = getUser(message.user);
 	if (user) {
-		var msg = vote(user, 'END TURN', false);
+		var msg = vote(user, 'END TURN', false, bot);
 		bot.reply(message, msg);	
 	}
 });
@@ -749,7 +749,7 @@ controller.hears(['force (.*)'], 'direct_message,direct_mention,mention', functi
 	var word = message.match[1];
 	var user = getUser(message.user);
 	if (user) {
-		var msg = vote(user, word, true);
+		var msg = vote(user, word, true, bot);
 		bot.reply(message, msg);
 	}
 });
